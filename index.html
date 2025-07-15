@@ -755,7 +755,7 @@ The future of ${topic} is incredibly promising, with enormous potential for posi
                 
                 // Step 1: Publish blog
                 document.getElementById('step-blog').classList.add('active');
-                showStatusMessage('Publishing your blog...', 'info');
+                showStatusMessage('📝 Publishing your blog...', 'info');
                 
                 const blogData = {
                     title: document.getElementById('blog-title').value,
@@ -770,36 +770,59 @@ The future of ${topic} is incredibly promising, with enormous potential for posi
                 document.getElementById('step-blog').classList.add('completed');
                 document.getElementById('blog-loading').style.display = 'none';
                 
+                showStatusMessage('✅ Blog published successfully!', 'success');
+                
                 // Step 2: Post to Twitter
                 document.getElementById('step-twitter').classList.add('active');
                 document.getElementById('twitter-loading').style.display = 'inline-block';
-                showStatusMessage('Posting to Twitter...', 'info');
+                showStatusMessage('🐦 Posting to Twitter...', 'info');
                 
-                // Simulate Twitter posting (in real implementation, call your backend)
-                await postToTwitter(currentBlogData.twitterUsername, currentBlogData.twitterPassword, blogData.tweetText);
+                // Actually attempt Twitter posting
+                const twitterResult = await postToTwitter(
+                    currentBlogData.twitterUsername, 
+                    currentBlogData.twitterPassword, 
+                    blogData.tweetText
+                );
                 
                 document.getElementById('step-twitter').classList.remove('active');
-                document.getElementById('step-twitter').classList.add('completed');
                 document.getElementById('twitter-loading').style.display = 'none';
+                
+                // Handle Twitter result
+                if (twitterResult.success) {
+                    document.getElementById('step-twitter').classList.add('completed');
+                    showStatusMessage('✅ Tweet posted successfully!', 'success');
+                } else {
+                    // Twitter failed but blog succeeded
+                    document.getElementById('step-twitter').classList.add('error');
+                    showStatusMessage(`⚠️ Blog published but Twitter posting failed: ${twitterResult.error}`, 'error');
+                }
                 
                 // Step 3: Complete
                 document.getElementById('step-complete').classList.add('completed');
                 
                 // Generate URLs (simulated)
                 const blogUrl = `https://autoblog.com/blog/${Date.now()}`;
-                const twitterUrl = `https://twitter.com/intent/tweet`;
+                const twitterUrl = twitterResult.success ? 
+                    `https://twitter.com/${currentBlogData.twitterUsername.replace('@', '')}/status/123456789` : 
+                    `https://twitter.com/compose/tweet?text=${encodeURIComponent(blogData.tweetText)}`;
                 
                 document.getElementById('blog-url').href = blogUrl;
                 document.getElementById('twitter-url').href = twitterUrl;
                 
-                showStatusMessage('All done! Your blog is live and posted to Twitter.', 'success');
+                // Show final status
+                if (twitterResult.success) {
+                    showStatusMessage('🎉 All done! Your blog is live and posted to Twitter.', 'success');
+                } else {
+                    showStatusMessage('📝 Blog published successfully! You can manually post to Twitter using the link below.', 'info');
+                }
                 
                 setTimeout(() => {
                     showPage('success');
-                }, 1000);
+                }, 2000);
                 
             } catch (error) {
-                showStatusMessage('Error during publishing: ' + error.message, 'error');
+                showStatusMessage('❌ Error during publishing: ' + error.message, 'error');
+                console.error('Publishing error:', error);
             }
         }
 
