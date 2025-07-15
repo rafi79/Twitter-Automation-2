@@ -1,8 +1,29 @@
 {
   "name": "autoblog-twitter-automation",
   "version": "1.0.0",
+  "description": "AI Blog Generator with Twitter Automation",
   "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step required'",
+    "start": "vercel --prod"
+  },
   "dependencies": {
-    "puppeteer": "^21.6.1"
-  }
+    "puppeteer-core": "^21.6.1",
+    "chrome-aws-lambda": "^10.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "ai",
+    "blog",
+    "twitter",
+    "automation",
+    "gemini",
+    "puppeteer",
+    "serverless"
+  ],
+  "author": "AutoBlog Team",
+  "license": "MIT"
 }
