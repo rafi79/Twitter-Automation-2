@@ -1,0 +1,11 @@
+{
+  "name": "autoblog-twitter-automation",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "puppeteer": "^21.6.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
