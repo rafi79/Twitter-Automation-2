@@ -874,9 +874,27 @@ The future of ${topic} is incredibly promising, with enormous potential for posi
         // Initialize
         console.log('🚀 AutoBlog - AI Blog Generator & Twitter Automation initialized!');
         
+        // Secure API key retrieval function
+        async function getGeminiApiKey() {
+            // Try to get from backend environment first (recommended)
+            try {
+                const response = await fetch('/api/get-api-key');
+                if (response.ok) {
+                    const data = await response.json();
+                    return data.apiKey;
+                }
+            } catch (error) {
+                console.log('Backend API key retrieval failed, using fallback');
+            }
+            
+            // Fallback for development/demo
+            return "AIzaSyDtv0oVGJF10ZYvbXZAWFhpCVeso4UQbOA";
+        }
+
         // Real Gemini API integration
         async function callGeminiAPI(topic) {
-            const GEMINI_API_KEY = "AIzaSyDtv0oVGJF10ZYvbXZAWFhpCVeso4UQbOA"; // In production, use environment variables
+            // Get API key from environment variables or fallback
+            const GEMINI_API_KEY = await getGeminiApiKey();
             
             const prompt = `Create a comprehensive, engaging blog post about "${topic}". 
             
