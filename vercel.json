@@ -1,11 +1,3 @@
 {
-  "functions": {
-    "api/post-tweet.js": {
-      "maxDuration": 60
-    }
-  },
-  "env": {
-    "PUPPETEER_SKIP_CHROMIUM_DOWNLOAD": "true",
-    "PUPPETEER_EXECUTABLE_PATH": "/usr/bin/google-chrome-stable"
-  }
+  "version": 2
 }
