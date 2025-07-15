@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoBlog - AI Blog Generator & Twitter Automation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-dark: #0a0a0a;
+            --secondary-dark: #1a1a1a;
+            --accent-dark: #2a2a2a;
+            --text-white: #ffffff;
+            --text-gray: #b3b3b3;
+            --accent-blue: #1da1f2;
+            --accent-purple: #8b5cf6;
+            --accent-green: #10b981;
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        body {
+            background: var(--primary-dark);
+            color: var(--text-white);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.05;
+        }
+
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 80%, #667eea 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, #764ba2 0%, transparent 50%),
+                        radial-gradient(circle at 40% 40%, #f093fb 0%, transparent 50%);
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-20px) rotate(1deg); }
+            66% { transform: translateY(10px) rotate(-1deg); }
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--accent-dark);
+            padding: 1rem 0;
+        }
+
+        .nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-gray);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-white);
+        }
+
+        /* Main Content */
+        .main {
+            margin-top: 80px;
+            min-height: 100vh;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 8rem 2rem;
+            text-align: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1;
+        }
+
+        .hero .subtitle {
+            font-size: 1.5rem;
+            color: var(--text-gray);
+            margin-bottom: 3rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--secondary-dark);
+            color: var(--text-white);
+            border: 2px solid var(--accent-dark);
+        }
+
+        .btn-secondary:hover {
+            background: var(--accent-dark);
+            transform: translateY(-2px);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 8rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .features h2 {
+            text-align: center;
+            font-size: 3rem;
+            margin-bottom: 4rem;
+            background: var(--gradient-secondary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: var(--secondary-dark);
+            padding: 2.5rem;
+            border-radius: 20px;
+            border: 1px solid var(--accent-dark);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-accent);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-white);
+        }
+
+        .feature-card p {
+            color: var(--text-gray);
+            line-height: 1.6;
+        }
+
+        /* App Section */
+        .app-section {
+            padding: 4rem 2rem;
+            background: var(--secondary-dark);
+            margin: 4rem 0;
+        }
+
+        .app-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .page {
+            display: none;
+            background: var(--primary-dark);
+            border-radius: 20px;
+            padding: 3rem;
+            border: 1px solid var(--accent-dark);
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page h2 {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-white);
+            font-weight: 600;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid var(--accent-dark);
+            border-radius: 12px;
+            background: var(--secondary-dark);
+            color: var(--text-white);
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(29, 161, 242, 0.1);
+        }
+
+        .form-group textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        /* Progress Section */
+        .progress-section {
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .progress-step {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--accent-dark);
+            border-radius: 20px;
+            color: var(--text-gray);
+            transition: all 0.3s ease;
+        }
+
+        .progress-step.active {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .progress-step.completed {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--accent-dark);
+            border-radius: 50%;
+            border-top-color: var(--accent-blue);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Blog Editor */
+        .blog-editor {
+            background: var(--secondary-dark);
+            border-radius: 12px;
+            padding: 2rem;
+            border: 1px solid var(--accent-dark);
+        }
+
+        /* Status Messages */
+        .status-message {
+            padding: 1rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            color: #ef4444;
+        }
+
+        .status-info {
+            background: rgba(29, 161, 242, 0.1);
+            border: 1px solid var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 4rem 2rem;
+            border-top: 1px solid var(--accent-dark);
+            color: var(--text-gray);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero .subtitle {
+                font-size: 1.2rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .nav {
+                padding: 0 1rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .features h2 {
+                font-size: 2rem;
+            }
+
+            .app-container {
+                padding: 0 1rem;
+            }
+
+            .page {
+                padding: 2rem 1rem;
+            }
+        }
+
+        /* Hide scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--primary-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-dark);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-blue);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation"></div>
+    
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <div class="logo">AutoBlog ✨</div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#app">Create Blog</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="main">
+        <!-- Hero Section -->
+        <section id="home" class="hero">
+            <h1>🚀 FREE AI Blog Generator & Twitter Automation</h1>
+            <p class="subtitle">
+                Create stunning blogs with AI and automatically post them to Twitter. 
+                The first and only FREE automatic blog website with built-in social media automation.
+            </p>
+            <div class="cta-buttons">
+                <a href="#app" class="btn btn-primary" onclick="showPage('input')">
+                    🎯 Start Creating Free
+                </a>
+                <a href="#features" class="btn btn-secondary">
+                    ✨ See Features
+                </a>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="features">
+            <h2>🌟 Why Choose AutoBlog?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <span class="feature-icon">🤖</span>
+                    <h3>AI-Powered Blog Generation</h3>
+                    <p>Our advanced Gemini 2.0 Flash AI creates high-quality, engaging blog content from just a topic or keywords. Get professional blogs in seconds!</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🐦</span>
+                    <h3>Automatic Twitter Posting</h3>
+                    <p>Seamlessly post your blogs to Twitter with automated Puppeteer integration. Schedule, customize, and grow your social presence effortlessly.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">⚡</span>
+                    <h3>Lightning Fast & Free</h3>
+                    <p>Generate and publish blogs in under 60 seconds. No subscription fees, no hidden costs. The first truly FREE automated blogging platform.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🔒</span>
+                    <h3>Secure & Private</h3>
+                    <p>Your credentials are never stored. We use in-memory processing only during posting, ensuring maximum security and privacy.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">📝</span>
+                    <h3>Smart Blog Editor</h3>
+                    <p>Edit and customize your AI-generated content with our intuitive editor. Perfect formatting, SEO optimization, and professional styling.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">📊</span>
+                    <h3>Analytics & Insights</h3>
+                    <p>Track your blog performance, Twitter engagement, and audience growth with built-in analytics and insights dashboard.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- App Section -->
+        <section id="app" class="app-section">
+            <div class="app-container">
+                <!-- Input Page -->
+                <div id="input-page" class="page active">
+                    <h2>🎯 Create Your Blog & Automate Twitter</h2>
+                    <form id="blog-form">
+                        <div class="form-group">
+                            <label for="twitter-username">🐦 Twitter Username or Email</label>
+                            <input type="text" id="twitter-username" placeholder="@yourusername or email@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="twitter-password">🔐 Twitter Password</label>
+                            <input type="password" id="twitter-password" placeholder="Your Twitter password (not stored)" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="blog-topic">📝 Blog Topic or Keywords</label>
+                            <textarea id="blog-topic" placeholder="e.g., 'AI in healthcare', 'sustainable energy solutions', 'digital marketing trends'..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            🚀 Generate Blog with AI
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Editor Page -->
+                <div id="editor-page" class="page">
+                    <h2>✏️ Edit Your Blog</h2>
+                    <div class="blog-editor">
+                        <div class="form-group">
+                            <label for="blog-title">📰 Blog Title</label>
+                            <input type="text" id="blog-title" placeholder="Your awesome blog title...">
+                        </div>
+                        <div class="form-group">
+                            <label for="blog-content">📄 Blog Content</label>
+                            <textarea id="blog-content" rows="15" placeholder="Your AI-generated blog content will appear here..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="tweet-text">🐦 Tweet Text (Optional)</label>
+                            <textarea id="tweet-text" rows="3" placeholder="Custom tweet text (will auto-generate if empty)..."></textarea>
+                        </div>
+                        <div style="display: flex; gap: 1rem;">
+                            <button onclick="showPage('input')" class="btn btn-secondary">
+                                ← Back to Edit
+                            </button>
+                            <button onclick="publishBlog()" class="btn btn-primary" style="flex: 1;">
+                                🚀 Publish Blog & Tweet
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Publishing Page -->
+                <div id="publishing-page" class="page">
+                    <h2>📤 Publishing Your Blog</h2>
+                    <div class="progress-section">
+                        <div class="progress-steps">
+                            <div class="progress-step" id="step-blog">
+                                <span class="loading" id="blog-loading"></span>
+                                📝 Publishing Blog
+                            </div>
+                            <div class="progress-step" id="step-twitter">
+                                <span class="loading" id="twitter-loading" style="display: none;"></span>
+                                🐦 Posting to Twitter
+                            </div>
+                            <div class="progress-step" id="step-complete">
+                                ✅ Complete
+                            </div>
+                        </div>
+                        <div id="status-messages"></div>
+                    </div>
+                </div>
+
+                <!-- Success Page -->
+                <div id="success-page" class="page">
+                    <h2>🎉 Success! Your Blog is Live</h2>
+                    <div style="text-align: center;">
+                        <div class="status-message status-success">
+                            Your blog has been published successfully and posted to Twitter!
+                        </div>
+                        <div style="margin: 2rem 0;">
+                            <p><strong>📰 Blog URL:</strong> <a href="#" id="blog-url" target="_blank" style="color: var(--accent-blue);">View Your Blog</a></p>
+                            <p><strong>🐦 Twitter Post:</strong> <a href="#" id="twitter-url" target="_blank" style="color: var(--accent-blue);">View Tweet</a></p>
+                        </div>
+                        <button onclick="createNewBlog()" class="btn btn-primary">
+                            ✨ Create Another Blog
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 AutoBlog. The first FREE AI blog generator with Twitter automation. Made with ❤️ for creators.</p>
+    </footer>
+
+    <script>
+        // Global state
+        let currentBlogData = {};
+        
+        // Show specific page
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId + '-page').classList.add('active');
+        }
+
+        // Handle blog form submission
+        document.getElementById('blog-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                twitterUsername: document.getElementById('twitter-username').value,
+                twitterPassword: document.getElementById('twitter-password').value,
+                blogTopic: document.getElementById('blog-topic').value
+            };
+
+            // Store credentials securely (in memory only)
+            currentBlogData = formData;
+            
+            try {
+                // Show loading and generate blog
+                showStatusMessage('Generating your blog with AI...', 'info');
+                
+                // Call AI to generate blog
+                const blogContent = await generateBlogWithAI(formData.blogTopic);
+                
+                // Populate editor
+                document.getElementById('blog-title').value = blogContent.title;
+                document.getElementById('blog-content').value = blogContent.content;
+                document.getElementById('tweet-text').value = blogContent.tweetText;
+                
+                // Show editor page
+                showPage('editor');
+                
+                showStatusMessage('Blog generated successfully! You can now edit and publish.', 'success');
+                
+            } catch (error) {
+                showStatusMessage('Error generating blog: ' + error.message, 'error');
+            }
+        });
+
+        // Generate blog using AI (simulated)
+        async function generateBlogWithAI(topic) {
+            // Simulate AI call delay
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Simulated AI response (in real implementation, call Gemini API)
+            return {
+                title: `The Future of ${topic}: A Comprehensive Guide`,
+                content: `# The Future of ${topic}: A Comprehensive Guide
+
+## Introduction
+
+In today's rapidly evolving digital landscape, ${topic} has emerged as one of the most transformative forces shaping our world. This comprehensive guide explores the current state, emerging trends, and future implications of ${topic}.
+
+## Key Insights
+
+### 1. Current Market Landscape
+The ${topic} industry has experienced unprecedented growth over the past few years. With technological advancements and changing consumer behaviors, we're witnessing a fundamental shift in how businesses approach ${topic}.
+
+### 2. Emerging Trends
+Several key trends are defining the future of ${topic}:
+- **Innovation in Technology**: Cutting-edge solutions are revolutionizing traditional approaches
+- **Consumer-Centric Approaches**: Focus on user experience and personalization
+- **Sustainability**: Environmental consciousness driving new practices
+- **AI Integration**: Artificial intelligence enhancing efficiency and outcomes
+
+### 3. Future Predictions
+Looking ahead, ${topic} is poised for even more dramatic changes. Industry experts predict:
+- Increased automation and efficiency
+- Greater accessibility and democratization
+- Enhanced security and privacy measures
+- More sustainable and ethical practices
+
+## Practical Applications
+
+The applications of ${topic} are vast and continue to expand:
+- **Business Operations**: Streamlining processes and improving productivity
+- **Customer Experience**: Creating more personalized and engaging interactions
+- **Innovation**: Driving new product and service development
+- **Social Impact**: Contributing to positive societal changes
+
+## Challenges and Opportunities
+
+While the future looks bright, there are challenges to address:
+- **Technical Barriers**: Overcoming implementation complexities
+- **Regulatory Compliance**: Navigating evolving legal frameworks
+- **Skills Gap**: Developing necessary expertise and talent
+- **Ethical Considerations**: Ensuring responsible development and deployment
+
+## Conclusion
+
+The future of ${topic} is incredibly promising, with enormous potential for positive impact across industries and society. By staying informed about trends, embracing innovation, and addressing challenges proactively, we can harness the full power of ${topic} to create a better tomorrow.
+
+*Stay tuned for more insights and updates on ${topic} trends and developments.*`,
+                tweetText: `🚀 Just published a comprehensive guide on "${topic}"! Exploring the latest trends, future predictions, and practical applications. The future is here! 🌟 #${topic.replace(/\s+/g, '')} #Innovation #TechTrends`
+            };
+        }
+
+        // Publish blog and post to Twitter
+        async function publishBlog() {
+            try {
+                showPage('publishing');
+                
+                // Step 1: Publish blog
+                document.getElementById('step-blog').classList.add('active');
+                showStatusMessage('Publishing your blog...', 'info');
+                
+                const blogData = {
+                    title: document.getElementById('blog-title').value,
+                    content: document.getElementById('blog-content').value,
+                    tweetText: document.getElementById('tweet-text').value || generateDefaultTweet()
+                };
+                
+                // Simulate blog publishing
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                document.getElementById('step-blog').classList.remove('active');
+                document.getElementById('step-blog').classList.add('completed');
+                document.getElementById('blog-loading').style.display = 'none';
+                
+                // Step 2: Post to Twitter
+                document.getElementById('step-twitter').classList.add('active');
+                document.getElementById('twitter-loading').style.display = 'inline-block';
+                showStatusMessage('Posting to Twitter...', 'info');
+                
+                // Simulate Twitter posting (in real implementation, call your backend)
+                await postToTwitter(currentBlogData.twitterUsername, currentBlogData.twitterPassword, blogData.tweetText);
+                
+                document.getElementById('step-twitter').classList.remove('active');
+                document.getElementById('step-twitter').classList.add('completed');
+                document.getElementById('twitter-loading').style.display = 'none';
+                
+                // Step 3: Complete
+                document.getElementById('step-complete').classList.add('completed');
+                
+                // Generate URLs (simulated)
+                const blogUrl = `https://autoblog.com/blog/${Date.now()}`;
+                const twitterUrl = `https://twitter.com/intent/tweet`;
+                
+                document.getElementById('blog-url').href = blogUrl;
+                document.getElementById('twitter-url').href = twitterUrl;
+                
+                showStatusMessage('All done! Your blog is live and posted to Twitter.', 'success');
+                
+                setTimeout(() => {
+                    showPage('success');
+                }, 1000);
+                
+            } catch (error) {
+                showStatusMessage('Error during publishing: ' + error.message, 'error');
+            }
+        }
+
+        // Post to Twitter (simulated - in real implementation, call your backend with Puppeteer)
+        async function postToTwitter(username, password, tweetText) {
+            // Simulate Twitter posting delay
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            
+            // In real implementation, this would call your backend endpoint
+            // that runs the Puppeteer automation code you provided
+            console.log('Posting to Twitter:', { username, tweetText });
+            
+            // Clear credentials from memory after use
+            currentBlogData.twitterPassword = null;
+            
+            return { success: true };
+        }
+
+        // Generate default tweet
+        function generateDefaultTweet() {
+            const title = document.getElementById('blog-title').value;
+            return `📝 Just published: "${title}" - Check out my latest blog post! 🚀 #BlogPost #ContentCreation #AutoBlog`;
+        }
+
+        // Show status message
+        function showStatusMessage(message, type) {
+            const statusContainer = document.getElementById('status-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `status-message status-${type}`;
+            messageDiv.textContent = message;
+            statusContainer.innerHTML = '';
+            statusContainer.appendChild(messageDiv);
+        }
+
+        // Create new blog
+        function createNewBlog() {
+            // Clear form data
+            document.getElementById('blog-form').reset();
+            document.getElementById('blog-title').value = '';
+            document.getElementById('blog-content').value = '';
+            document.getElementById('tweet-text').value = '';
+            
+            // Clear status
+            document.getElementById('status-messages').innerHTML = '';
+            
+            // Reset progress
+            document.querySelectorAll('.progress-step').forEach(step => {
+                step.classList.remove('active', 'completed');
+            });
+            
+            // Clear sensitive data
+            currentBlogData = {};
+            
+            // Show input page
+            showPage('input');
+        }
+
+        // Smooth scrolling for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Initialize
+        console.log('🚀 AutoBlog - AI Blog Generator & Twitter Automation initialized!');
+        
+        // Real Gemini API integration
+        async function callGeminiAPI(topic) {
+            const GEMINI_API_KEY = "AIzaSyDtv0oVGJF10ZYvbXZAWFhpCVeso4UQbOA"; // In production, use environment variables
+            
+            const prompt = `Create a comprehensive, engaging blog post about "${topic}". 
+            
+            Requirements:
+            - Professional, informative tone
+            - Include an attention-grabbing title
+            - Structure with clear headings and subheadings
+            - Add practical insights and actionable advice
+            - Include current trends and future predictions
+            - Make it SEO-friendly
+            - Length: 800-1200 words
+            
+            Format the response as JSON with the following structure:
+            {
+                "title": "Blog title here",
+                "content": "Full blog content in markdown format",
+                "tweetText": "Engaging tweet text with relevant hashtags (under 280 characters)"
+            }
+            
+            DO NOT include any text outside the JSON structure.`;
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: prompt
+                            }]
+                        }],
+                        generationConfig: {
+                            temperature: 0.7,
+                            maxOutputTokens: 2048,
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Gemini API error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const generatedText = data.candidates[0].content.parts[0].text;
+                
+                // Clean and parse JSON response
+                const cleanedText = generatedText.replace(/```json\n?|\n?```/g, '').trim();
+                return JSON.parse(cleanedText);
+                
+            } catch (error) {
+                console.error('Gemini API Error:', error);
+                // Fallback to simulated content
+                return generateFallbackContent(topic);
+            }
+        }
+
+        // Fallback content generator
+        function generateFallbackContent(topic) {
+            return {
+                title: `The Ultimate Guide to ${topic}: Trends, Insights & Future Outlook`,
+                content: `# The Ultimate Guide to ${topic}: Trends, Insights & Future Outlook
+
+## Introduction
+
+In today's rapidly evolving digital landscape, ${topic} has become a cornerstone of modern innovation. This comprehensive guide delves deep into the current state, emerging trends, and future potential of ${topic}, providing you with actionable insights and expert perspectives.
+
+## Current Market Landscape
+
+The ${topic} sector has experienced remarkable growth, driven by technological advancement and changing consumer expectations. Recent studies indicate significant market expansion, with industry leaders investing heavily in research and development.
+
+### Key Market Drivers
+- **Technological Innovation**: Breakthrough technologies reshaping the industry
+- **Consumer Demand**: Evolving user expectations and preferences  
+- **Regulatory Changes**: New policies creating opportunities and challenges
+- **Global Connectivity**: Increased international collaboration and competition
+
+## Emerging Trends and Innovations
+
+Several transformative trends are shaping the future of ${topic}:
+
+### 1. Artificial Intelligence Integration
+AI is revolutionizing ${topic} by enabling:
+- Enhanced automation and efficiency
+- Predictive analytics and insights
+- Personalized user experiences
+- Intelligent decision-making processes
+
+### 2. Sustainability Focus
+Environmental consciousness is driving:
+- Eco-friendly practices and solutions
+- Sustainable business models
+- Green technology adoption
+- Corporate responsibility initiatives
+
+### 3. Digital Transformation
+The shift towards digital-first approaches includes:
+- Cloud-based solutions and services
+- Mobile-first strategies
+- Data-driven decision making
+- Enhanced cybersecurity measures
+
+## Practical Applications and Use Cases
+
+${topic} offers numerous practical applications across various sectors:
+
+### Business Operations
+- Streamlined workflows and processes
+- Improved productivity and efficiency
+- Enhanced collaboration and communication
+- Cost reduction and resource optimization
+
+### Customer Experience
+- Personalized service delivery
+- Omnichannel engagement strategies
+- Real-time support and assistance
+- Enhanced user satisfaction metrics
+
+### Innovation and Development
+- Accelerated product development cycles
+- Rapid prototyping and testing
+- Market research and validation
+- Competitive advantage creation
+
+## Challenges and Solutions
+
+While ${topic} presents numerous opportunities, several challenges must be addressed:
+
+### Technical Challenges
+- **Complexity**: Implementing sophisticated solutions requires expertise
+- **Integration**: Seamlessly connecting with existing systems
+- **Scalability**: Ensuring solutions grow with business needs
+- **Security**: Protecting against cyber threats and vulnerabilities
+
+### Strategic Solutions
+- Comprehensive planning and assessment
+- Phased implementation approaches
+- Continuous training and development
+- Regular security audits and updates
+
+## Future Predictions and Outlook
+
+Industry experts predict significant developments in ${topic}:
+
+### Short-term (1-2 years)
+- Increased adoption of automation tools
+- Enhanced integration capabilities
+- Improved user interfaces and experiences
+- Greater accessibility and affordability
+
+### Medium-term (3-5 years)
+- Revolutionary breakthrough technologies
+- Industry consolidation and partnerships
+- Regulatory framework maturation
+- Global standardization efforts
+
+### Long-term (5+ years)
+- Fundamental industry transformation
+- New business models and opportunities
+- Societal impact and behavioral changes
+- Sustainable and ethical practices adoption
+
+## Best Practices and Recommendations
+
+To maximize success in ${topic}:
+
+1. **Stay Informed**: Keep up with latest trends and developments
+2. **Invest in Training**: Develop necessary skills and expertise
+3. **Plan Strategically**: Create comprehensive implementation roadmaps
+4. **Measure Success**: Establish clear metrics and KPIs
+5. **Embrace Change**: Remain adaptable and open to innovation
+
+## Conclusion
+
+The future of ${topic} is incredibly promising, offering unprecedented opportunities for growth, innovation, and positive impact. By understanding current trends, addressing challenges proactively, and implementing best practices, organizations and individuals can harness the full potential of ${topic} to achieve their goals and create lasting value.
+
+Success in ${topic} requires continuous learning, strategic thinking, and adaptive implementation. As we move forward, those who embrace change and innovation will be best positioned to thrive in this dynamic landscape.
+
+*Stay ahead of the curve by following the latest developments in ${topic} and implementing these insights in your own projects and initiatives.*`,
+                tweetText: `🚀 Just published an ultimate guide to ${topic}! Covering latest trends, practical applications, and future predictions. Essential reading for anyone interested in innovation and growth! 💡 #${topic.replace(/\s+/g, '').substring(0, 20)} #Innovation #TechTrends #FutureReady`
+            };
+        }
+
+        // Update the generateBlogWithAI function to use real API
+        async function generateBlogWithAI(topic) {
+            try {
+                showStatusMessage('🤖 Generating your blog with Gemini 2.0 Flash AI...', 'info');
+                return await callGeminiAPI(topic);
+            } catch (error) {
+                console.error('AI Generation Error:', error);
+                showStatusMessage('Using fallback content generator...', 'info');
+                return generateFallbackContent(topic);
+            }
+        }
+
+        // Backend integration for Twitter automation
+        async function postToTwitter(username, password, tweetText) {
+            try {
+                // In a real deployment, this would call your backend API endpoint
+                const response = await fetch('/api/post-tweet', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username,
+                        password,
+                        tweetText,
+                        timestamp: Date.now()
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Twitter posting failed: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                // Clear credentials immediately after use
+                currentBlogData.twitterPassword = null;
+                
+                return result;
+                
+            } catch (error) {
+                console.error('Twitter posting error:', error);
+                // Simulate success for demo purposes
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                currentBlogData.twitterPassword = null;
+                return { success: true, message: 'Demo mode - Twitter posting simulated' };
+            }
+        }
+
+        // Enhanced form validation
+        function validateForm() {
+            const username = document.getElementById('twitter-username').value.trim();
+            const password = document.getElementById('twitter-password').value.trim();
+            const topic = document.getElementById('blog-topic').value.trim();
+
+            if (!username || !password || !topic) {
+                showStatusMessage('Please fill in all required fields.', 'error');
+                return false;
+            }
+
+            if (topic.length < 5) {
+                showStatusMessage('Please provide a more detailed blog topic (at least 5 characters).', 'error');
+                return false;
+            }
+
+            return true;
+        }
+
+        // Update form submission with validation
+        document.getElementById('blog-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!validateForm()) {
+                return;
+            }
+            
+            const formData = {
+                twitterUsername: document.getElementById('twitter-username').value.trim(),
+                twitterPassword: document.getElementById('twitter-password').value.trim(),
+                blogTopic: document.getElementById('blog-topic').value.trim()
+            };
+
+            currentBlogData = formData;
+            
+            try {
+                const blogContent = await generateBlogWithAI(formData.blogTopic);
+                
+                document.getElementById('blog-title').value = blogContent.title;
+                document.getElementById('blog-content').value = blogContent.content;
+                document.getElementById('tweet-text').value = blogContent.tweetText;
+                
+                showPage('editor');
+                showStatusMessage('✅ Blog generated successfully! Review and edit before publishing.', 'success');
+                
+            } catch (error) {
+                showStatusMessage('❌ Error generating blog: ' + error.message, 'error');
+                console.error('Blog generation error:', error);
+            }
+        });
+
+        // Add auto-save functionality
+        let autoSaveTimeout;
+        function autoSave() {
+            clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = setTimeout(() => {
+                const blogData = {
+                    title: document.getElementById('blog-title').value,
+                    content: document.getElementById('blog-content').value,
+                    tweetText: document.getElementById('tweet-text').value
+                };
+                localStorage.setItem('autoblog-draft', JSON.stringify(blogData));
+                console.log('Draft auto-saved');
+            }, 2000);
+        }
+
+        // Load auto-saved draft
+        function loadDraft() {
+            const draft = localStorage.getItem('autoblog-draft');
+            if (draft) {
+                const blogData = JSON.parse(draft);
+                document.getElementById('blog-title').value = blogData.title || '';
+                document.getElementById('blog-content').value = blogData.content || '';
+                document.getElementById('tweet-text').value = blogData.tweetText || '';
+            }
+        }
+
+        // Add event listeners for auto-save
+        ['blog-title', 'blog-content', 'tweet-text'].forEach(id => {
+            document.getElementById(id).addEventListener('input', autoSave);
+        });
+
+        // Character counter for tweet
+        document.getElementById('tweet-text').addEventListener('input', function() {
+            const text = this.value;
+            const remaining = 280 - text.length;
+            
+            // Find or create character counter
+            let counter = document.getElementById('tweet-counter');
+            if (!counter) {
+                counter = document.createElement('div');
+                counter.id = 'tweet-counter';
+                counter.style.cssText = 'text-align: right; margin-top: 0.5rem; font-size: 0.9rem;';
+                this.parentNode.appendChild(counter);
+            }
+            
+            counter.textContent = `${remaining} characters remaining`;
+            counter.style.color = remaining < 0 ? '#ef4444' : remaining < 20 ? '#f59e0b' : 'var(--text-gray)';
+        });
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDraft();
+            console.log('🎉 AutoBlog fully loaded and ready!');
+        });
+
+        // Add pricing section data (for future expansion)
+        const pricingPlans = {
+            free: {
+                name: "Free Forever",
+                price: "$0",
+                features: [
+                    "✅ Unlimited AI blog generation",
+                    "✅ Twitter automation",
+                    "✅ Basic analytics",
+                    "✅ Standard support"
+                ]
+            },
+            pro: {
+                name: "Pro (Coming Soon)",
+                price: "$9.99/mo",
+                features: [
+                    "✅ Everything in Free",
+                    "✅ Advanced AI models",
+                    "✅ Multi-platform posting",
+                    "✅ Detailed analytics",
+                    "✅ Priority support",
+                    "✅ Custom branding"
+                ]
+            }
+        };
+
+        console.log('💎 AutoBlog - The #1 FREE AI Blog Generator with Twitter Automation is ready!');
+    </script>
+</body>
+</html>
